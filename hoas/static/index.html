@@ -1,0 +1,240 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#000000">
+  <title>Rathgrith</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&family=Inter+Tight:wght@500&display=swap">
+  <!-- 标题字体只用到这几个字母，用 text 参数只下载需要的字形 -->
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600&text=Rathgrith&display=swap">
+  <link rel="stylesheet" href="static/style.css">
+</head>
+<body>
+  <header class="nav">
+    <div class="container nav-inner">
+      <div class="brand">Rathgrith</div>
+      <div class="nav-right">
+        <select id="lang-select" class="lang-select" data-i18n-aria="lang.label"></select>
+        <div class="who" id="who" hidden>
+          <span class="nav-user" id="user-name"></span>
+          <button class="btn btn-outline-dark btn-sm logout-btn" id="logout-btn" data-i18n-title="nav.logout" data-i18n-aria="nav.logout">
+            <svg class="logout-icon" viewBox="0 0 20 20" aria-hidden="true"><path d="M8 3H4.5A1.5 1.5 0 0 0 3 4.5v11A1.5 1.5 0 0 0 4.5 17H8M13 6l4 4-4 4M17 10H8" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <span class="logout-text" data-i18n="nav.logout"></span>
+          </button>
+        </div>
+      </div>
+    </div>
+    <!-- 有请求在进行时显示的细进度条 -->
+    <div class="nav-progress" id="nav-progress" aria-hidden="true"></div>
+  </header>
+
+  <!-- 只在演示版（GitHub Pages）中由 demo.js 显示 -->
+  <div class="demo-banner" id="demo-banner" role="note" hidden>
+    <div class="container demo-inner">
+      <span data-i18n="demo.banner"></span>
+      <a id="demo-source" href="#" target="_blank" rel="noopener" hidden><span data-i18n="demo.source"></span> →</a>
+    </div>
+  </div>
+
+  <!-- 启动时确认登录状态期间显示 -->
+  <main id="boot-view" class="boot" role="status" aria-live="polite">
+    <span class="spinner spinner-lg" aria-hidden="true"></span>
+    <span data-i18n="loading.boot"></span>
+  </main>
+
+  <!-- 登录 -->
+  <main id="login-view" class="login" hidden>
+    <div class="login-inner">
+      <h1 class="display" data-i18n-html="login.title"></h1>
+      <p class="lead" data-i18n="login.lead"></p>
+      <p class="demo-hint" id="demo-login-hint" data-i18n="demo.loginHint" hidden></p>
+      <form id="login-form" class="login-form">
+        <label class="field">
+          <span data-i18n="login.username"></span>
+          <input name="username" autocomplete="username" required>
+        </label>
+        <label class="field">
+          <span data-i18n="login.password"></span>
+          <input name="password" type="password" autocomplete="current-password" required>
+        </label>
+        <label class="check check-dark"><input type="checkbox" name="remember" checked><span data-i18n="login.remember"></span></label>
+        <div class="alert alert-dark" id="login-error" hidden></div>
+        <button class="btn btn-primary btn-block" type="submit" id="login-btn"><span data-i18n="login.submit"></span></button>
+      </form>
+    </div>
+  </main>
+
+  <main id="app-view" hidden>
+    <!-- 概览：黑色区域 -->
+    <section class="band band-dark">
+      <div class="container">
+        <div class="hero-head">
+          <div>
+            <p class="eyebrow" id="today-label"></p>
+            <h1 class="display" data-i18n="hero.title"></h1>
+          </div>
+          <button class="btn btn-outline-dark btn-sm" id="refresh-overview"><span data-i18n="hero.refresh"></span></button>
+        </div>
+
+        <p class="hero-status" id="overview-status" role="status" aria-live="polite" hidden>
+          <span class="spinner" aria-hidden="true"></span><span data-i18n="loading.overview"></span>
+        </p>
+        <div class="alert alert-dark hero-error" id="overview-error" role="alert" hidden>
+          <span id="overview-error-text"></span>
+          <button class="btn btn-outline-dark btn-sm" id="overview-retry"><span data-i18n="loading.retry"></span></button>
+        </div>
+
+        <div class="stats">
+          <div class="stat stat-featured" id="next-card">
+            <span class="stat-label" data-i18n="stat.next"></span>
+            <span class="stat-value" id="next-time">—</span>
+            <span class="stat-sub" id="next-machine"></span>
+          </div>
+          <div class="stat">
+            <span class="stat-label" data-i18n="stat.week"></span>
+            <span class="stat-value" id="week-used">—</span>
+            <div class="meter"><div class="meter-fill" id="week-meter"></div></div>
+          </div>
+          <div class="stat">
+            <span class="stat-label" data-i18n="stat.booked"></span>
+            <span class="stat-value" id="res-count">—</span>
+            <span class="stat-sub" id="res-range"></span>
+          </div>
+        </div>
+
+        <div class="rail-head">
+          <h2 class="heading" data-i18n="rail.title"></h2>
+          <span class="rail-hint" id="overview-meta"></span>
+        </div>
+        <div id="reservations" class="rail"></div>
+      </div>
+    </section>
+
+    <!-- 批量预约：白色区域 -->
+    <section class="band band-light">
+      <div class="container">
+        <div class="section-head">
+          <h2 class="title" data-i18n="book.title"></h2>
+          <p class="muted" data-i18n="book.lead"></p>
+        </div>
+
+        <div class="booking">
+          <div class="card step">
+            <div class="step-head">
+              <span class="step-no">1</span>
+              <h3 data-i18n="step.dates"></h3>
+              <span class="count-pill" id="selected-count"></span>
+            </div>
+            <div class="cal-toolbar">
+              <div class="pills" id="weekday-chips"></div>
+              <div class="pills">
+                <button class="pill" data-quick="all" data-i18n="quick.all"></button>
+                <button class="pill" data-quick="weekdays" data-i18n="quick.weekdays"></button>
+                <button class="pill" data-quick="weekends" data-i18n="quick.weekends"></button>
+                <button class="pill" data-quick="invert" data-i18n="quick.invert"></button>
+                <button class="pill" data-quick="clear" data-i18n="quick.clear"></button>
+              </div>
+            </div>
+            <div id="calendar" class="calendar"></div>
+            <div class="legend">
+              <span><i class="dot wash"></i><span data-i18n="legend.wash"></span></span>
+              <span><i class="dot dry"></i><span data-i18n="legend.dry"></span></span>
+            </div>
+            <p class="hint" data-i18n="cal.hint"></p>
+          </div>
+
+          <div class="side">
+            <div class="card step">
+              <div class="step-head">
+                <span class="step-no">2</span>
+                <h3 data-i18n="step.washer"></h3>
+              </div>
+              <label class="field field-light">
+                <span data-i18n="wash.hour"></span>
+                <select id="wash-hour"></select>
+              </label>
+              <div class="sub" data-i18n="wash.machines"></div>
+              <div class="pills" id="washer-chips"></div>
+              <label class="switch"><input type="checkbox" id="rotate-washers" checked><span data-i18n="wash.rotate"></span></label>
+              <label class="switch"><input type="checkbox" id="allow-other-washers"><span data-i18n="wash.allowOther"></span></label>
+            </div>
+
+            <div class="card step">
+              <div class="step-head">
+                <span class="step-no">3</span>
+                <h3 data-i18n="step.dryer"></h3>
+                <label class="switch switch-head" data-i18n-title="dry.toggle"><input type="checkbox" id="dryer-enabled"><span class="sr-only" data-i18n="dry.toggle"></span></label>
+              </div>
+              <div id="dryer-settings" class="dryer-settings">
+                <label class="field field-light">
+                  <span data-i18n="dry.offset"></span>
+                  <select id="dryer-offset"></select>
+                </label>
+                <div class="sub" data-i18n="dry.machines"></div>
+                <div class="pills" id="dryer-chips"></div>
+                <label class="switch"><input type="checkbox" id="dryer-include-wash"><span data-i18n="dry.includeWash"></span></label>
+                <label class="switch"><input type="checkbox" id="rotate-dryers" checked><span data-i18n="dry.rotate"></span></label>
+              </div>
+              <p class="muted small" id="dryer-off-hint" data-i18n="dry.offHint"></p>
+            </div>
+
+            <div class="card step step-plain">
+              <label class="switch"><input type="checkbox" id="skip-existing" checked><span data-i18n="opt.skipExisting"></span></label>
+              <p class="note" data-i18n-html="opt.quotaNote"></p>
+              <div class="alert" id="plan-error" hidden></div>
+              <button class="btn btn-dark btn-block" id="plan-btn"><span data-i18n="plan.generate"></span></button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 计划 -->
+    <section class="band band-soft" id="plan-section" hidden>
+      <div class="container">
+        <div class="plan-head">
+          <div>
+            <h2 class="title" data-i18n="plan.title"></h2>
+            <p class="muted" id="plan-meta"></p>
+          </div>
+          <div class="plan-tools">
+            <button class="btn btn-soft btn-sm" id="autoresolve-btn" data-i18n-title="plan.autoresolveTitle"><span data-i18n="plan.autoresolve"></span></button>
+            <button class="btn btn-soft btn-sm" id="replan-btn"><span data-i18n="plan.replan"></span></button>
+          </div>
+        </div>
+        <p class="plan-status" id="plan-status" role="status" aria-live="polite" hidden>
+          <span class="spinner" aria-hidden="true"></span><span data-i18n="plan.updating"></span>
+        </p>
+
+        <div id="weeks" class="weeks"></div>
+
+        <div class="plan-table">
+          <div class="prow prow-head" aria-hidden="true">
+            <div data-i18n="col.date"></div><div data-i18n="col.wash"></div><div data-i18n="col.dry"></div><div data-i18n="col.notes"></div>
+          </div>
+          <div id="plan-body"></div>
+        </div>
+
+        <div id="log" class="log" hidden></div>
+      </div>
+
+      <div class="action-bar">
+        <div class="container action-inner">
+          <span id="exec-summary"></span>
+          <div class="action-btns">
+            <button class="btn btn-outline btn-md" id="stop-btn" data-i18n="exec.stop" hidden></button>
+            <button class="btn btn-dark btn-md" id="exec-btn"><span data-i18n="exec.run"></span></button>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <div id="toast" class="toast" hidden></div>
+  <script src="static/i18n.js"></script>
+  <script src="static/app.js"></script>
+</body>
+</html>

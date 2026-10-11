@@ -1,0 +1,24 @@
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+*.egg-info/
+build/
+dist/
+
+# 虚拟环境（uv sync 生成）
+.venv/
+
+# 演示版构建产物（scripts/build_demo.py 生成）
+_site/
+
+# 本地环境变量和 Vercel CLI 的项目链接
+.env
+.env.*
+.vercel/
+
+# 编辑器和系统文件
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

@@ -1,0 +1,28 @@
+[project]
+name = "hoas-schedule"
+version = "0.1.0"
+description = "Batch-book HOAS laundry machines and dryers from a simple web UI"
+requires-python = ">=3.11"
+license = "MIT"
+dependencies = [
+    "flask>=3.0",
+    "requests>=2.31",
+    "beautifulsoup4>=4.12",
+    "cryptography>=50.0.2",
+]
+
+[project.scripts]
+hoas = "hoas.server:main"
+
+[dependency-groups]
+dev = ["pytest>=8"]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["hoas"]
+
+[tool.vercel]
+entrypoint = "hoas.server:app"
